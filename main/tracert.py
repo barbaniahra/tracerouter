@@ -25,6 +25,9 @@ class TraceRT:
                 yield parsed
 
         return_code = process.poll()
+        if return_code is None:
+            return_code = process.returncode
+        logging.debug('Return code: {}'.format(return_code))
         if return_code != 0:
             raise Exception('tracert finished with non-zero code: {}, stderr: `{}`, stdout: `{}`'.format(
                 return_code, process.stderr.read().decode('utf8'), ''.join(stdout)))
