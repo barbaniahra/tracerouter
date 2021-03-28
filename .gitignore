@@ -1,4 +1,4 @@
 .idea
 tracerouter.iml
-ip2asn-combined.tsv.gz
+*.tsv.gz
 .DS_Store
