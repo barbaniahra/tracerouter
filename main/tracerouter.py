@@ -5,9 +5,22 @@ from main.db import DB
 from main.tracert import TraceRT
 from main.writer import Writer
 import logging
+from pathlib import Path
+from os.path import *
+import site
 
-CURRENT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-RESOURCE_DIRECTORY = os.path.abspath(os.path.join(CURRENT_DIRECTORY, '..', 'resources'))
+
+def get_resource_dir():
+    possibilities = [
+        abspath(join(dirname(__file__), '..', 'tracerouter_resources')),
+        abspath(join(sys.prefix, 'tracerouter_resources')),
+        abspath(join(site.USER_BASE, 'tracerouter_resources'))
+    ]
+
+    for p in possibilities:
+        if Path(p).exists():
+            return p
+
 
 def set_logging_level(level):
     root = logging.getLogger()
@@ -19,11 +32,12 @@ def set_logging_level(level):
     handler.setFormatter(formatter)
     root.addHandler(handler)
 
+
 def parse_args(argv):
-    p = configargparse.ArgParser(default_config_files=[os.path.join(RESOURCE_DIRECTORY, 'config.ini')])
+    p = configargparse.ArgParser(default_config_files=[os.path.join(get_resource_dir(), 'config.ini')])
     p.add_argument('-c', '--config', required=False, is_config_file=True, help='Config file path')
     p.add_argument('--db_path', required=False, help='Path to database TSV file',
-                   default=os.path.join(os.path.join(RESOURCE_DIRECTORY, 'db.tcv.gz')))
+                   default=os.path.join(os.path.join(get_resource_dir(), 'db.tcv.gz')))
     p.add_argument('--db_url', required=True, help='Url of TSV file')
     p.add_argument('--db_expiration_seconds', type=int, required=True, help='How long before updating the DB')
     p.add_argument('--tracert_command', required=True, help='TraceRT command or path')
@@ -32,7 +46,7 @@ def parse_args(argv):
     return p.parse_args(argv)
 
 
-if __name__ == '__main__':
+def main():
     args = parse_args(sys.argv[1:])
     set_logging_level(args.logging_level)
     db = DB(db_path=args.db_path, db_url=args.db_url, db_expiration_seconds=args.db_expiration_seconds)
@@ -49,3 +63,7 @@ if __name__ == '__main__':
 
             writer.write_line(trace_info, lookup_info)
     logging.info('Tracing finished')
+
+
+if __name__ == '__main__':
+    main()
